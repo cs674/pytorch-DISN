@@ -5,6 +5,9 @@ import os
 import cv2
 import sys
 import time
+import torch
+
+from sdfnet import sdfnet
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -81,7 +84,7 @@ else:
     split = 'test'
 
 
-TRAIN_LISTINFO = []
+TEST_LISTINFO = []
 cats_limit = {}
 
 cat_ids = []
@@ -94,83 +97,46 @@ else:
     cats_limit[cats[FLAGS.category]] = 0
 
 for cat_id in cat_ids:
-    train_lst = os.path.join(FLAGS.train_lst_dir, cat_id+"_{}.lst".format(split))
-    with open(train_lst, 'r') as f:
+    test_lst = os.path.join(lst_dir, cat_id+"_{}.lst".format(split))
+    with open(test_lst, 'r') as f:
         lines = f.read().splitlines()
         for line in lines:
             for render in range(24):
                 cats_limit[cat_id]+=1
-                TRAIN_LISTINFO += [(cat_id, line.strip(), render)]
+                TEST_LISTINFO += [(cat_id, line.strip(), render)]
 
 
 info = {'rendered_dir': raw_dirs["renderedh5_dir"],
             'sdf_dir': raw_dirs['sdf_dir']}
 print(info)
 
-TRAIN_DATASET = data_sdf_h5_queue.Pt_sdf_img(FLAGS, listinfo=TRAIN_LISTINFO, info=info, cats_limit=cats_limit, shuffle=shuffle)
 
-TRAIN_DATASET.start()
+net = sdfnet()
+# Here we would like to load a pre trained model
+
+
+TEST_DATASET = data_sdf_h5_queue.Pt_sdf_img(FLAGS, listinfo=TEST_LISTINFO, info=info, cats_limit=cats_limit, shuffle=shuffle)
+
+TEST_DATASET.start()
 
 # Use fetch to get random, use get_batch for the same everytime
-# batch_data = TRAIN_DATASET.fetch()
-batch_data = TRAIN_DATASET.get_batch(0)
-
-print(batch_data.keys())
-
-for key in batch_data:
-    print(key)
-    try:
-        print(batch_data[key].shape)
-    except:
-        print(batch_data[key])
-    print()
+batch_data = TEST_DATASET.get_batch(0)
 
 # show image
 # plt.imshow(batch_data['img'][0])
 # plt.show()
 
-# show point clouds
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# points = batch_data['sdf_pt'][0, :, :]
-# points_rot = batch_data['sdf_pt_rot'][0, :, :] + 0.01
-# ax.scatter(points[:, 0], points[:, 1], points[:, 2])
-# ax.scatter(points_rot[:, 0], points_rot[:, 1], points_rot[:, 2])
-# plt.show()
+# Run out network here
 
-fig = plt.figure(figsize=plt.figaspect(0.5))
-points = batch_data['sdf_pt'][0, :, :]
-trans_mat = batch_data['trans_mat'][0]
+# Convert the numpy data to torch
+image_batch = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2)
+points_batch = torch.from_numpy(batch_data['sdf_pt'])
+sdf_val = torch.from_numpy(batch_data['sdf_val'])
+# print(image_batch.shape)
+pred_sdf = net(image_batch, points_batch)
 
-# Transform points
-points_trans = np.matmul(np.concatenate((points, np.ones([points.shape[0], 1])), axis=1), trans_mat)
-# Project points
-points_xy = points_trans[:, :2]/(np.expand_dims(points_trans[:, 2], axis=-1))
-# Force all points to be within image space
-points_xy = np.clip(points_xy, 0, 136)
+loss = ((pred_sdf - sdf_val)**2).mean()
+print(loss)
 
-# set colors of points
-colors = cm.rainbow(np.linspace(0, 0.5, points.shape[0]))
-colors[-1, :] = np.array([1, 0, 0, 1])
 
-ax1 = fig.add_subplot(1, 2, 1, projection='3d')
-ax1.scatter(points[:, 0], points[:, 1], points[:, 2], c=colors)
-# Make the shapes upright
-ax1.view_init(120, -80)
-# Make all axes the same size
-bound_size = 1
-ax1.set_xlim(-bound_size, bound_size)
-ax1.set_ylim(-bound_size, bound_size)
-ax1.set_zlim(-bound_size, bound_size)
-# Label axes
-# ax1.set_xlabel
-ax1.set_xlabel('X axis')
-ax1.set_ylabel('Y axis')
-ax1.set_zlabel('Z axis')
-
-ax2 = fig.add_subplot(1, 2, 2)
-ax2.imshow(batch_data['img'][0])
-ax2.scatter(points_xy[:, 0], points_xy[:, 1], c=colors)
-plt.show()
-
-TRAIN_DATASET.shutdown()
+TEST_DATASET.shutdown()
