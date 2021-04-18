@@ -164,6 +164,28 @@ with torch.no_grad():
     pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
 
     np_sdf = pred_sdf.numpy()
+
+
+
+
+    import plotly
+    import plotly.figure_factory as ff
+    from skimage import measure
+    
+    IF = pred_sdf.reshape(12,12,12)
+    verts, simplices = measure.marching_cubes_classic(IF, 0)
+    x, y, z = zip(*verts)
+    colormap = ['rgb(255,105,180)', 'rgb(255,255,51)', 'rgb(0,191,255)']
+    fig = ff.create_trisurf(x=x,
+                        y=y,
+                        z=z,
+                        plot_edges=False,
+                        colormap=colormap,
+                        simplices=simplices,
+                        title="Isosurface")
+    plotly.offline.plot(fig)
+
+    
     np.save('sdf.npy', np_sdf)
 
 
