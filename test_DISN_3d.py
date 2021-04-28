@@ -114,7 +114,7 @@ print(info)
 with torch.no_grad():
     net = sdfnet()
     # Here we would like to load a pre trained model
-    net.load_state_dict(torch.load('models/sdfmodel0.torch', map_location='cpu'))
+    net.load_state_dict(torch.load('models/sdfmodel99.torch', map_location='cpu'))
     net.eval()
 
 
@@ -130,9 +130,10 @@ with torch.no_grad():
     # plt.show()
 
     # Generate grid
-    N = 12
-    max_dimensions = np.array([0.5, 0.5, 0.5])
-    min_dimensions = np.array([-0.5, -0.5, -0.5])
+    N = 64
+    dist = 1
+    max_dimensions = np.array([dist, dist, dist])
+    min_dimensions = np.array([-dist, -dist, -dist])
     bounding_box_dimensions = max_dimensions - min_dimensions
     grid_spacing = max(bounding_box_dimensions)/N
     X, Y, Z = np.meshgrid(list(np.arange(min_dimensions[0], max_dimensions[0], grid_spacing)),
@@ -172,7 +173,7 @@ with torch.no_grad():
     import plotly.figure_factory as ff
     from skimage import measure
     
-    IF = pred_sdf.reshape(12,12,12)
+    IF = pred_sdf.reshape(N,N,N)
     verts, simplices = measure.marching_cubes_classic(IF, 0)
     x, y, z = zip(*verts)
     colormap = ['rgb(255,105,180)', 'rgb(255,255,51)', 'rgb(0,191,255)']
@@ -184,6 +185,10 @@ with torch.no_grad():
                         simplices=simplices,
                         title="Isosurface")
     plotly.offline.plot(fig)
+
+    # show image
+    plt.imshow(batch_data['img'][0])
+    plt.show()
 
     
     np.save('sdf.npy', np_sdf)

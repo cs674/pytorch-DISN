@@ -136,6 +136,7 @@ sdf_val = torch.from_numpy(batch_data['sdf_val'])
 pred_sdf = net(image_batch, points_batch)
 
 loss = ((pred_sdf - sdf_val)**2).mean()
+# Do all chamfer, earthmover, blah blah
 print("loss: {}".format(loss))
 
 
