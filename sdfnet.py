@@ -102,17 +102,19 @@ class sdfnet(nn.Module):
             print("reshaped points_batch: {}".format(points_batch_reshape.shape))
             upsample = nn.Upsample(size=img_h,mode='bilinear')
             res_layer1 = upsample(layer_out['layer1'])
-            points_res1 = nn.functional.grid_sample(res_layer3, points_batch_reshape)
+            points_res1 = nn.functional.grid_sample(res_layer1, points_batch_reshape)
             res_layer2 = upsample(layer_out['layer2'])
-            points_res2 = nn.functional.grid_sample(res_layer3, points_batch_reshape)
+            points_res2 = nn.functional.grid_sample(res_layer2, points_batch_reshape)
             res_layer3 = upsample(layer_out['layer3'])
             points_res3 = nn.functional.grid_sample(res_layer3, points_batch_reshape)
             
+            points_img_features = torch.cat((points_res1, points_res2, points_res3), 1) #
             
             print('res_layer1: {}\n res_layer2:{}\n res_layer3:{}'.format(res_layer1.shape, 
                 res_layer2.shape, res_layer3.shape))
             print('resampled points: \n layer1:{}\nlayer2:{}\nlayer3:{}'.format(points_res1.shape,
                 points_res2.shape, points_res3.shape))
+            print("points_img_features: {}".format(points_img_features.shape))
             # print(res_layer2.shape)
         # size [32, 512, 5, 5] from layer4
         # size [32, 512, 1, 1] from avgpool
