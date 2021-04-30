@@ -146,6 +146,7 @@ trans_mat = batch_data['trans_mat'][0]
 points_trans = np.matmul(np.concatenate((points, np.ones([points.shape[0], 1])), axis=1), trans_mat)
 # Project points
 points_xy = points_trans[:, :2]/(np.expand_dims(points_trans[:, 2], axis=-1))
+print("projected points: {}".format(points_xy[:5]))
 # Force all points to be within image space
 points_xy = np.clip(points_xy, 0, 136)
 

@@ -112,7 +112,7 @@ info = {'rendered_dir': raw_dirs["renderedh5_dir"],
 print(info)
 
 
-device = 'cuda:0'
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 learning_rate = 0.001
 num_epochs = 100
@@ -155,7 +155,7 @@ for epoch in range(num_epochs):
         image_batch = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2).to(device)
         points_batch = torch.from_numpy(batch_data['sdf_pt']).to(device)
         sdf_val = torch.from_numpy(batch_data['sdf_val']).to(device)
-        # print(image_batch.shape)
+        print("shapes: image_batch = {}, points_batch ={}".format(image_batch.shape, points_batch.shape))
         pred_sdf = net(image_batch, points_batch)
 
         loss = ((pred_sdf - sdf_val)**2).mean()
