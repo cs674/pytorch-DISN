@@ -5,6 +5,7 @@ import os
 import cv2
 import sys
 import time
+import torch
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -142,13 +143,29 @@ fig = plt.figure(figsize=plt.figaspect(0.5))
 points = batch_data['sdf_pt'][0, :, :]
 trans_mat = batch_data['trans_mat'][0]
 
-# Transform points
-points_trans = np.matmul(np.concatenate((points, np.ones([points.shape[0], 1])), axis=1), trans_mat)
-# Project points
-points_xy = points_trans[:, :2]/(np.expand_dims(points_trans[:, 2], axis=-1))
-print("projected points: {}".format(points_xy[:5]))
-# Force all points to be within image space
-points_xy = np.clip(points_xy, 0, 136)
+torch_points = torch.from_numpy(batch_data['sdf_pt'])
+torch_trans_mat = torch.from_numpy(batch_data['trans_mat'])
+
+print('here')
+print(torch_points.shape)
+print(torch.cat((torch_points, torch.ones([torch_points.shape[0], torch_points.shape[1], 1], device=torch_points.device)), dim=-1).shape)
+
+torch_points_trans = torch.bmm(torch.cat((torch_points, torch.ones([torch_points.shape[0], torch_points.shape[1], 1], device=torch_points.device)), dim=-1), torch_trans_mat)
+print(torch_points_trans.shape)
+torch_points_xy = torch_points_trans[:, :, :2]/torch_points_trans[:, :, 2].unsqueeze(-1)
+torch_points_xy = torch.clamp(torch_points_xy, 0, 136)
+
+# # Transform points
+# points_trans = np.matmul(np.concatenate((points, np.ones([points.shape[0], 1])), axis=1), trans_mat)
+# # Project points
+# points_xy = points_trans[:, :2]/(np.expand_dims(points_trans[:, 2], axis=-1))
+# print("projected points: {}".format(points_xy[:5]))
+# # Force all points to be within image space
+# points_xy = np.clip(points_xy, 0, 136)
+
+points_xy = torch_points_xy[0, ...].numpy()
+
+print("points_xy.shape:", points_xy.shape)
 
 # set colors of points
 colors = cm.rainbow(np.linspace(0, 0.5, points.shape[0]))

@@ -84,6 +84,7 @@ if train:
 else:
     split = 'test'
 
+two_stream = False
 
 TRAIN_LISTINFO = []
 cats_limit = {}
@@ -112,9 +113,9 @@ info = {'rendered_dir': raw_dirs["renderedh5_dir"],
 print(info)
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
-learning_rate = 0.001
+learning_rate = 1e-4
 num_epochs = 100
 
 net = sdfnet().to(device)
@@ -128,8 +129,9 @@ training_params = []
 for name, param in net.named_parameters():
     if param.requires_grad:
         # print(name)
-        if 'resnet' not in name:
-            training_params.append(param)
+        # if 'resnet' not in name:
+        #     training_params.append(param)
+        training_params.append(param)
 
 optimizer = torch.optim.Adam(training_params, learning_rate)
 # optimizer stuff
@@ -141,6 +143,8 @@ TRAIN_DATASET = data_sdf_h5_queue.Pt_sdf_img(FLAGS, listinfo=TRAIN_LISTINFO, inf
 TRAIN_DATASET.start()
 
 num_batches = int(len(TRAIN_DATASET) / FLAGS.batch_size)
+
+loss_function = torch.nn.L1Loss()
 
 for epoch in range(num_epochs):
     ave_loss = 0
@@ -154,11 +158,16 @@ for epoch in range(num_epochs):
         # Convert the numpy data to torch
         image_batch = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2).to(device)
         points_batch = torch.from_numpy(batch_data['sdf_pt']).to(device)
+        trans_mat = torch.from_numpy(batch_data['trans_mat']).to(device)
         sdf_val = torch.from_numpy(batch_data['sdf_val']).to(device)
-        print("shapes: image_batch = {}, points_batch ={}".format(image_batch.shape, points_batch.shape))
-        pred_sdf = net(image_batch, points_batch)
+        # print("shapes: image_batch = {}, points_batch ={}".format(image_batch.shape, points_batch.shape))
 
-        loss = ((pred_sdf - sdf_val)**2).mean()
+        if two_stream:
+            pred_sdf = net(image_batch, points_batch, trans_mat)
+        else:
+            pred_sdf = net(image_batch, points_batch)
+
+        loss = loss_function(pred_sdf, sdf_val)
         loss.backward()
         optimizer.step()
         ave_loss += loss.item()
@@ -169,7 +178,10 @@ for epoch in range(num_epochs):
     print('ave loss: {}'.format(ave_loss))
 
     # Save the model after each epoch
-    torch.save(net.state_dict(), 'models/sdfmodel{}.torch'.format(epoch))
+    if two_stream:
+        torch.save(net.state_dict(), 'models/sdfmodel_two_stream_{}.torch'.format(epoch))
+    else:
+        torch.save(net.state_dict(), 'models/sdfmodel_one_stream_{}.torch'.format(epoch))
 
 
 TRAIN_DATASET.shutdown()

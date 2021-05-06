@@ -131,9 +131,10 @@ batch_data = TEST_DATASET.get_batch(0)
 # Convert the numpy data to torch
 image_batch = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2)
 points_batch = torch.from_numpy(batch_data['sdf_pt'])
+trans_mat = torch.from_numpy(batch_data['trans_mat'])
 sdf_val = torch.from_numpy(batch_data['sdf_val'])
 # print(image_batch.shape)
-pred_sdf = net(image_batch, points_batch)
+pred_sdf = net(image_batch, points_batch, trans_mat=trans_mat)
 
 loss = ((pred_sdf - sdf_val)**2).mean()
 # Do all chamfer, earthmover, blah blah

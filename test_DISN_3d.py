@@ -78,12 +78,13 @@ print(FLAGS)
 # Shuffle the dataset?
 shuffle = False
 # Change this to switch between train and test
-train = False
+train = True
 if train:
     split = 'train'
 else:
     split = 'test'
 
+two_stream = False
 
 TEST_LISTINFO = []
 cats_limit = {}
@@ -114,7 +115,10 @@ print(info)
 with torch.no_grad():
     net = sdfnet()
     # Here we would like to load a pre trained model
-    net.load_state_dict(torch.load('models/sdfmodel99.torch', map_location='cpu'))
+    if two_stream:
+        net.load_state_dict(torch.load('models/sdfmodel_two_stream_99.torch', map_location='cpu'))
+    else:
+        net.load_state_dict(torch.load('models/sdfmodel_one_stream_99.torch', map_location='cpu'))
     net.eval()
 
 
@@ -122,8 +126,11 @@ with torch.no_grad():
 
     TEST_DATASET.start()
 
+    print()
+    print(len(TEST_DATASET)/FLAGS.batch_size)
+
     # Use fetch to get random, use get_batch for the same everytime
-    batch_data = TEST_DATASET.get_batch(0)
+    batch_data = TEST_DATASET.get_batch(650)
 
     # show image
     # plt.imshow(batch_data['img'][0])
@@ -131,7 +138,7 @@ with torch.no_grad():
 
     # Generate grid
     N = 64
-    dist = 1
+    dist = 0.9
     max_dimensions = np.array([dist, dist, dist])
     min_dimensions = np.array([-dist, -dist, -dist])
     bounding_box_dimensions = max_dimensions - min_dimensions
@@ -161,8 +168,13 @@ with torch.no_grad():
     # Convert the numpy data to torch
     image = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2)[0]
     points = torch.from_numpy(points.astype('Float32')).permute(1,0)
+    trans_mat = torch.from_numpy(batch_data['trans_mat'])[0]
 
-    pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
+    if two_stream:
+        pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0), trans_mat.unsqueeze(0))
+    else:
+        pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
+    # pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
 
     np_sdf = pred_sdf.numpy()
 
@@ -174,7 +186,7 @@ with torch.no_grad():
     from skimage import measure
     
     IF = pred_sdf.reshape(N,N,N)
-    verts, simplices = measure.marching_cubes_classic(IF, 0)
+    verts, simplices = measure.marching_cubes_classic(IF, 0.01)
     x, y, z = zip(*verts)
     colormap = ['rgb(255,105,180)', 'rgb(255,255,51)', 'rgb(0,191,255)']
     fig = ff.create_trisurf(x=x,
