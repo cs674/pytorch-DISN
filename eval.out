@@ -1,0 +1,75 @@
+/mnt/nfs/work1/696ds-s21/hhwang/pytorch-DISN/models
+Namespace(alpha=False, augcolorback=False, augcolorfore=False, backcolorwhite=False, batch_size=1, beta1=0.5, binary=False, cam_est=False, cat_limit=168000, category='chair', decay_rate=0.9, decay_step=200000, gpu='1', img_feat_onestream=True, img_feat_twostream=False, img_h=137, img_w=137, learning_rate=0.0001, log_dir='checkpoint', mask_weight=4.0, max_epoch=200, momentum=0.9, multi_view=False, num_classes=1024, num_points=1, num_sample_points=2048, optimizer='adam', restore_model='', restore_modelcnn='', restore_modelpn='', rot=False, sdf_res=256, tanh=False, threedcnn=False, train_lst_dir='./data/filelists', valid_lst_dir='./data/filelists', volimp=False)
+{'rendered_dir': '/mnt/nfs/work1/696ds-s21/hhwang/ssd1/datasets/ShapeNet/ShapeNetRenderingh5_v1/', 'sdf_dir': '/mnt/nfs/work1/696ds-s21/hhwang/ssd1/datasets/ShapeNet/SDF_v1/'}
+epoch_amount  31464
+cats_limit  {'03001627': 31464}
+Load a sample image...
+Predict and generate .obj file... done.
+Collect GT surface samples... done.
+Collect OURS surface samples... trimesh_load: obj/chair_ours.obj
+start sample surface of  16416
+end sample surface
+centroid, m [32.56446339 33.26402667 32.65376849] 31.821638005204186
+export_mesh norm_ours.obj
+done.
+Collect OURS surface samples... trimesh_load: ../DISN_xar/demo/chair_theirs.obj
+start sample surface of  16964
+end sample surface
+centroid, m [31.95596721 31.8186485  31.87524703] 29.979572346721678
+export_mesh norm_theirs.obj
+done.
+Ground Truth
+[[ 0.39804991 -0.46724985 -0.5540432 ]
+ [-0.35488795  0.32783701 -0.54660939]
+ [ 0.34668449  0.31283738  0.57929783]
+ [-0.39652028  0.72071616 -0.10472109]
+ [ 0.14265536 -0.04223547 -0.553334  ]
+ [ 0.6064557  -0.35679507 -0.38847091]
+ [-0.30789543  0.3078975  -0.55431336]
+ [ 0.26520599 -0.00785559 -0.55264778]
+ [ 0.18944877  0.0291924  -0.25645248]
+ [-0.3610988   0.7329913   0.01348541]]
+Ours
+[[ 0.19095747  0.28036297  0.58351328]
+ [-0.53009239  0.6702409  -0.1971398 ]
+ [-0.45411387  0.71356729  0.32111471]
+ [ 0.18012186 -0.11763866  0.56925176]
+ [ 0.58175228 -0.21063744 -0.53092576]
+ [-0.51783701  0.60537301  0.27271649]
+ [-0.2634491  -0.06959592 -0.57697087]
+ [ 0.61152979 -0.43015941  0.10534489]
+ [-0.17303213  0.18372015 -0.17697597]
+ [-0.26719861 -0.32312236 -0.56759409]]
+Theirs
+[[ 0.33616692 -0.17814798 -0.59476449]
+ [ 0.13181028 -0.31050722  0.60024717]
+ [-0.48274523  0.20616251  0.22925218]
+ [-0.17860712 -0.47436511 -0.32569433]
+ [-0.04428373 -0.47306897 -0.24821104]
+ [ 0.40988953 -0.4648863   0.30784731]
+ [ 0.68885331 -0.18749667 -0.17649389]
+ [ 0.69656985 -0.17429133 -0.24686494]
+ [ 0.71323934 -0.32009267 -0.01730035]
+ [ 0.70792563 -0.33697796  0.21843813]]
+--------------------------------------------------------------------------------
+Our Distances:
+Chamfer Distance      : 39.212513
+Earth Mover's Distance: 274.759037
+--------------------------------------------------------------------------------
+Their Distances:
+Chamfer Distance      : 39.519670
+Earth Mover's Distance: 273.086696
+--------------------------------------------------------------------------------
+GT shape
+(294646, 3)
+(589288, 3)
+OURS shape
+(8210, 3)
+(16416, 3)
+THEIRS shape
+(8484, 3)
+(16964, 3)
+HTML Rendering: GT
+HTML Rendering: OURS
+HTML Rendering: THEIRS
+done.
