@@ -24,11 +24,11 @@ def CD(PC, PC_T):
         diff1 = p1 - PC_T  # (1,3) - (256,3) = (256,3)
         dist1 = np.sum(diff1**2, axis=1)  # (256,1)
         ret1 += np.min(dist1)
-    for p2 in PC:
+    for p2 in PC_T:
         diff2 = p2 - PC  # (1,3) - (218,3) = (218,3)
         dist2 = np.sum(diff2**2, axis=1)  # (218,1)
         ret2 += np.min(dist2)
-    return (ret1 + ret2) * 0.001
+    return (ret1 + ret2)
 
 # Earth Mover's Distance: Bijection Minimum Cost Matching using Hungarian Algorithm
 def EMD(PC, PC_T):
@@ -39,7 +39,7 @@ def EMD(PC, PC_T):
         for j in range(M):
             C[i][j] = np.sqrt(np.sum((PC[i] - PC_T[j])**2))
     row_ind, col_ind = linear_sum_assignment(C)
-    return C[row_ind, col_ind].sum() * 100
+    return C[row_ind, col_ind].sum()
 ################################################################################
 
 

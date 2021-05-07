@@ -134,7 +134,7 @@ print(info)
 with torch.no_grad():
     net = sdfnet()
     # Here we would like to load a pre trained model
-    net.load_state_dict(torch.load('models/sdfmodel99.torch', map_location='cpu'))
+    net.load_state_dict(torch.load('models/sdfmodel_one_stream_99.torch', map_location='cpu'))
     net.eval()
 
 
