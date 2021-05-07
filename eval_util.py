@@ -20,12 +20,12 @@ def CD(PC, PC_T):
     ret1 = 0
     ret2 = 0
     for p1 in PC:
-        diff1 = p1 - PC_T  # (1,3) - (256,3) = (256,3)
-        dist1 = np.sum(diff1**2, axis=1)  # (256,1)
+        diff1 = p1 - PC_T  # (1,3) - (N,3) = (N,3)
+        dist1 = np.sum(diff1**2, axis=1)  # (N,1)
         ret1 += np.min(dist1)
     for p2 in PC_T:
-        diff2 = p2 - PC  # (1,3) - (218,3) = (218,3)
-        dist2 = np.sum(diff2**2, axis=1)  # (218,1)
+        diff2 = p2 - PC
+        dist2 = np.sum(diff2**2, axis=1)
         ret2 += np.min(dist2)
     return (ret1 + ret2)
 
@@ -39,6 +39,34 @@ def EMD(PC, PC_T):
             C[i][j] = np.sqrt(np.sum((PC[i] - PC_T[j])**2))
     row_ind, col_ind = linear_sum_assignment(C)
     return C[row_ind, col_ind].sum()
+
+
+def FSCORE(PC, PC_T, thresh):
+    min_dists1 = []
+    min_dists2 = []
+    for p1 in PC:
+        diff1 = p1 - PC_T # (N,3)
+        distances1 = np.sqrt(np.sum(diff1**2, axis=1))  # (N,1)
+        min_d1 = np.min(distances1)
+        min_dists1.append(min_d1)
+    num_correct1 = 0
+    for d1 in min_dists1:
+        if d1 < thresh:
+            num_correct1 += 1
+    precision = num_correct1 / len(PC)
+
+    for p2 in PC_T:
+        diff2 = p2 - PC # (N,3)
+        distances2 = np.sqrt(np.sum(diff2**2, axis=1))  # (N,1)
+        min_d2 = np.min(distances2)
+        min_dists2.append(min_d2)
+    num_correct2 = 0
+    for d2 in min_dists2:
+        if d2 < thresh:
+            num_correct2 += 1
+    recall = num_correct2 / len(PC_T)
+    return 2 * (precision*recall) / (precision+recall)
+
 ################################################################################
 
 

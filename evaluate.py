@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 # Evaluation 
-from eval_util import CD, EMD, obj_data_to_mesh3d, get_normalize_mesh, HTML_rendering
+from eval_util import CD, EMD, obj_data_to_mesh3d, get_normalize_mesh, HTML_rendering, FSCORE
 
 import trimesh
 
@@ -191,7 +191,7 @@ with torch.no_grad():
     print('Collect OURS surface samples...', end=' ')
     obj_file_ours                     = 'obj/chair_ours.obj'
 #    obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, 'obj/')
-    obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, 'norm_ours.obj')
+    obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, 'obj/chair_ours_norm.obj')
     mesh_ours                         = trimesh.load_mesh(obj_file_ours_norm, process=False)
     pc_ours_surf, _                   = trimesh.sample.sample_surface(mesh_ours, FLAGS.num_sample_points)
     choice_ours                       = np.random.randint(pc_ours_surf.shape[0], size=FLAGS.num_sample_points)
@@ -202,7 +202,7 @@ with torch.no_grad():
     print('Collect OURS surface samples...', end=' ')
     obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
     #obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'obj/')
-    obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'norm_theirs.obj')
+    obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'obj/chair_theirs_norm.obj')
     mesh_theirs                       = trimesh.load_mesh(obj_file_theirs_norm, process=False)
     pc_theirs_surf, _                 = trimesh.sample.sample_surface(mesh_theirs, FLAGS.num_sample_points)
     choice_theirs                     = np.random.randint(pc_theirs_surf.shape[0], size=FLAGS.num_sample_points)
@@ -217,8 +217,24 @@ with torch.no_grad():
     print('Theirs')
     print(PC_THEIRS[:10])
 
-
     print('--------------------------------------------------------------------------------')
+    print('FSCORE')
+    SIDE_LEN = 1.4
+    ratios = [0.01, 0.02, 0.05, 0.10, 0.20]
+    print('Threshold(%)', end='\t')
+    for r in ratios:
+        pr = 100*r
+        print('%3.1f' % pr, end='\t')
+    print()
+    print('--------------------------------------------------------------------------------')        
+    print('OURS        ', end='\t')
+    for r in ratios:
+        print('%5.3f' % FSCORE(PC_OURS  , PC_GT, SIDE_LEN * r), end='\t')
+    print()
+    print('THEIRS      ', end='\t')    
+    for r in ratios:
+        print('%5.3f' % FSCORE(PC_THEIRS, PC_GT, SIDE_LEN * r), end='\t')
+    print('\n--------------------------------------------------------------------------------')
     #ours
     print('Our Distances:')
     cd   = CD(PC_OURS, PC_GT)
@@ -263,6 +279,9 @@ with torch.no_grad():
     HTML_rendering('OURS'  , verts_ours  , simplices_ours  )
     HTML_rendering('THEIRS', verts_theirs, simplices_theirs)
     print('done.')
+
+
+
 
     
     TEST_DATASET.shutdown()
