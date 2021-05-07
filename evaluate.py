@@ -14,9 +14,13 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 # Evaluation 
-from eval_util import CD, EMD, obj_data_to_mesh3d, get_normalize_mesh
+from eval_util import CD, EMD, obj_data_to_mesh3d, get_normalize_mesh, HTML_rendering
 
 import trimesh
+
+
+from skimage import measure
+import mcubes
 
 # BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
@@ -33,11 +37,11 @@ import data_sdf_h5_queue # as data
 import create_file_lst
 
 # PC  : (218,3)
-# PC_T: (256,3)
+# PC_GT: (256,3)
 
     
 
-OBJ_NO = 31
+OBJ_NO = 0
 
 
 
@@ -59,7 +63,7 @@ parser.add_argument("--beta1", type=float, dest="beta1",
 parser.add_argument('--num_sample_points', type=int, default=2048, help='Sample Point Number [default: 2048]')
 #parser.add_argument('--sdf_points_num', type=int, default=32, help='Sample Point Number [default: 2048]')
 parser.add_argument('--max_epoch', type=int, default=200, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 32]')
 parser.add_argument('--img_h', type=int, default=137, help='Image Height')
 parser.add_argument('--img_w', type=int, default=137, help='Image Width')
 parser.add_argument('--sdf_res', type=int, default=256, help='sdf grid')
@@ -136,160 +140,132 @@ with torch.no_grad():
     # Here we would like to load a pre trained model
     net.load_state_dict(torch.load('models/sdfmodel_one_stream_99.torch', map_location='cpu'))
     net.eval()
-
-
     TEST_DATASET = data_sdf_h5_queue.Pt_sdf_img(FLAGS, listinfo=TEST_LISTINFO, info=info, cats_limit=cats_limit, shuffle=shuffle)
-
     TEST_DATASET.start()
-
     # Use fetch to get random, use get_batch for the same everytime
     batch_data = TEST_DATASET.get_batch(0)
-
-    # print(batch_data.keys())
-    # for k in batch_data.keys():
-    #     print(k)
-    #     for i in range(32):
-    #         print(batch_data[k])
-    print(batch_data['obj_nm'][OBJ_NO])
-    # print(batch_data['obj_nm'])
-    # print(batch_data['sdf_pt'].shape)  # BATCH_SIZE(32), NUM_SAPMLES(4096), 3
-    #PC_T = batch_data['sdf_pt'][0, :, :]
-    # print('PC_T(Ground Truth)')
-    # print(PC_T.shape)
-#    print(batch_data['img'][0].shape)
-
-
-    
-    # show image
-    # plt.imshow(batch_data['img'][0])
-    # plt.show()
-
     # Generate grid
     N = 65
-    #N = 16
     dist = 1
     max_dimensions = np.array([dist, dist, dist])
     min_dimensions = np.array([-dist, -dist, -dist])
-
     bounding_box_dimensions = max_dimensions - min_dimensions
     grid_spacing = max(bounding_box_dimensions)/N
     X, Y, Z = np.meshgrid(list(np.arange(min_dimensions[0], max_dimensions[0], grid_spacing)),
     list(np.arange(min_dimensions[1], max_dimensions[1], grid_spacing)),
     list(np.arange(min_dimensions[2], max_dimensions[2], grid_spacing)))
-
     X = X.reshape(-1)
     Y = Y.reshape(-1)
     Z = Z.reshape(-1)
-
-    # print(X[:10])
-    # print(Y[:10])
-    # print(Z[:10])
     points = np.array([X, Y, Z])
-    
 
+    print('Load a sample image...')
+    # Demo Image: comment out below five lines unless you use the specified image
+    img_file = "03001627_d72f27e4240bd7d0283b00891f680579_00.png"
+    img_arr = cv2.imread(img_file, cv2.IMREAD_UNCHANGED).astype(np.uint8)[:, :, :3]
+    batch_img = np.asarray([img_arr.astype(np.float32) / 255.])
+    batch_data = {}
+    batch_data['img'] = batch_img
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(projection='3d')
-    # ax.scatter(points[0, :], points[1, :], points[2, :])
-    # plt.show()
-    # exit()
-
-
-    # Demo Image: comment out if not using demo image
-    # img_file = "03001627_17e916fc863540ee3def89b32cef8e45_20.png" # 
-    # img_arr = cv2.imread(img_file, cv2.IMREAD_UNCHANGED).astype(np.uint8)[:, :, :3]
-    # batch_img = np.asarray([img_arr.astype(np.float32) / 255.])
-    # batch_data = {}
-    # print('batch_img')
-    # print(batch_img.shape)
-    # batch_data['img'] = batch_img
-
-
-    
+    # Prediction & obj generation
+    print('Predict and generate .obj file...', end=' ')
     image = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2)[OBJ_NO]
     points = torch.from_numpy(points.astype('Float32')).permute(1,0)
-    pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
-    np_sdf = pred_sdf.numpy()
-
-    import plotly
-    import plotly.figure_factory as ff
-    from skimage import measure
-    
-    IF = pred_sdf.reshape(N,N,N)
+    ours_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
+    np_sdf = ours_sdf.numpy()
+    IF = ours_sdf.reshape(N,N,N)
     IF = IF.permute(1,0,2)
+    verts_ours, simplices_ours = mcubes.marching_cubes(np.asarray(IF), 0)
+    mcubes.export_obj(verts_ours, simplices_ours, "obj/chair_ours.obj")
+    print('done.')
     
-    import mcubes
-    verts_pred, simplices_pred = mcubes.marching_cubes(np.asarray(IF), 0)
-    mcubes.export_obj(verts_pred, simplices_pred, "out/chair_pred.obj")
-    obj_file_pred_norm, centroid, m = get_normalize_mesh('out/chair_pred.obj', 'out/')
-    # mcubes.export_obj(vertices, triangles, "demo/chair_pred_norm.obj")
+    # GT (Already Normalized)
+    print('Collect GT surface samples...', end=' ')
+    obj_file_gt                       = '../ssd1/datasets/ShapeNet/mesh/03001627/d72f27e4240bd7d0283b00891f680579/isosurf.obj'
+    mesh_gt                           = trimesh.load_mesh(obj_file_gt, process=False)
+    pc_gt_surf, _                     = trimesh.sample.sample_surface(mesh_gt, FLAGS.num_sample_points)
+    choice_gt                         = np.random.randint(pc_gt_surf.shape[0], size=FLAGS.num_sample_points)
+    PC_GT                             = pc_gt_surf[choice_gt, ...]
+    print('done.')
+    # OURS
+    print('Collect OURS surface samples...', end=' ')
+    obj_file_ours                     = 'obj/chair_ours.obj'
+#    obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, 'obj/')
+    obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, 'norm_ours.obj')
+    mesh_ours                         = trimesh.load_mesh(obj_file_ours_norm, process=False)
+    pc_ours_surf, _                   = trimesh.sample.sample_surface(mesh_ours, FLAGS.num_sample_points)
+    choice_ours                       = np.random.randint(pc_ours_surf.shape[0], size=FLAGS.num_sample_points)
+    PC_OURS                           = pc_ours_surf[choice_ours, ...]
+    print('done.')
     
-#    verts_pred, simplices_pred = measure.marching_cubes_classic(IF, 0, spacing=(grid_spacing, grid_spacing, grid_spacing))
-    with open(obj_file_pred_norm, 'r', encoding='utf8') as f:
-        obj_data = f.read()
-        verts_pred, simplices_pred = obj_data_to_mesh3d(obj_data)
-
-    choice_pred = np.random.randint(verts_pred.shape[0], size=FLAGS.num_sample_points)
-    sampled_verts_pred = verts_pred[choice_pred, ...]
-    PC = sampled_verts_pred
-
-    ################################################################################
-    # Evaluation for Mesh
-    ################################################################################
-    # Ground Truth Mesh
-    #obj_file_gt = '../ssd1/datasets/ShapeNet/ShapeNetCore.v1/03001627/ed751e0c20f48b3226fc87e2982c8a2b/model.obj'
-    obj_file_gt = '../ssd1/datasets/ShapeNet/mesh/03001627/d72f27e4240bd7d0283b00891f680579/isosurf.obj'
-
-    # using surface sample
-    # mesh = trimesh.load_mesh(obj_file_gt, process=False)
-    # verts_gt, simplices_gt = trimesh.sample.sample_surface(mesh, FLAGS.num_sample_points)
-
-    # using vertices
-    with open(obj_file_gt, 'r', encoding='utf8') as f:
-        obj_data = f.read()
-        verts_gt, simplices_gt = obj_data_to_mesh3d(obj_data)
-
-    ################################################################################
-    # Evaluation for Sampled Point Cloud
-    ################################################################################
-    choice_gt = np.random.randint(verts_gt.shape[0], size=FLAGS.num_sample_points)
-    sampled_verts_gt = verts_gt[choice_gt, ...]
-    PC_T = sampled_verts_gt
-
+    # THEIRS
+    print('Collect OURS surface samples...', end=' ')
+    obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
+    #obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'obj/')
+    obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'norm_theirs.obj')
+    mesh_theirs                       = trimesh.load_mesh(obj_file_theirs_norm, process=False)
+    pc_theirs_surf, _                 = trimesh.sample.sample_surface(mesh_theirs, FLAGS.num_sample_points)
+    choice_theirs                     = np.random.randint(pc_theirs_surf.shape[0], size=FLAGS.num_sample_points)
+    PC_THEIRS                         = pc_theirs_surf[choice_theirs, ...]
+    PC_THEIRS[:, [0,2]]               = PC_THEIRS[:, [2,0]]
+    print('done.')
+    
     print('Ground Truth')
-    print(PC_T[:10])
-    print('Prediction')
-    print(PC[:10])
-    
-    cd   = CD(PC, PC_T)
+    print(PC_GT[:10])
+    print('Ours')
+    print(PC_OURS[:10])
+    print('Theirs')
+    print(PC_THEIRS[:10])
+
+
+    print('--------------------------------------------------------------------------------')
+    #ours
+    print('Our Distances:')
+    cd   = CD(PC_OURS, PC_GT)
     print('Chamfer Distance      : %f' % cd)
-    emd  = EMD(PC, PC_T)
+    emd  = EMD(PC_OURS, PC_GT)
     print('Earth Mover\'s Distance: %f' % emd)
 
+    print('--------------------------------------------------------------------------------')
+    #Theirs
+    print('Their Distances:')
+    cd   = CD(PC_THEIRS, PC_GT)
+    print('Chamfer Distance      : %f' % cd)
+    emd  = EMD(PC_THEIRS, PC_GT)
+    print('Earth Mover\'s Distance: %f' % emd)
 
-    ################################################################################
-    x_gt, y_gt, z_gt = zip(*verts_gt)
-    colormap = ['rgb(255,105,180)', 'rgb(255,255,51)', 'rgb(0,191,255)']
-    fig = ff.create_trisurf(x=x_gt,
-                        y=y_gt,
-                        z=z_gt,
-                        plot_edges=False,
-                        colormap=colormap,
-                        simplices=simplices_gt,
-                        title="Ground Truth")
-    plotly.offline.plot(fig, auto_open=False, filename="chair_gt.html")
+    print('--------------------------------------------------------------------------------')
+    # Renderings
+    with open(obj_file_gt, 'r', encoding='utf8') as f_gt:
+        obj_data_gt = f_gt.read()
+        verts_gt    , simplices_gt     = obj_data_to_mesh3d(obj_data_gt)
+    print('GT shape')
+    print(verts_gt.shape)
+    print(simplices_gt.shape)        
+        
+    with open(obj_file_ours_norm, 'r', encoding='utf8') as f_ours:
+        obj_data_ours = f_ours.read()
+        verts_ours  , simplices_ours   = obj_data_to_mesh3d(obj_data_ours)
+    print('OURS shape')
+    print(verts_ours.shape)
+    print(simplices_ours.shape)
+        
+    with open(obj_file_theirs_norm, 'r', encoding='utf8') as f_theirs:
+        obj_data_theirs = f_theirs.read()
+        verts_theirs, simplices_theirs = obj_data_to_mesh3d(obj_data_theirs)
+    print('THEIRS shape')
+    print(verts_theirs.shape)
+    print(simplices_theirs.shape)
+    verts_theirs[:, [0,2]] = verts_theirs[:, [2,0]]
 
     
-    # #Pred Mesh
-    x_pred, y_pred, z_pred = zip(*verts_pred)
-    colormap = ['rgb(255,105,180)', 'rgb(255,255,51)', 'rgb(0,191,255)']
-    fig = ff.create_trisurf(x=x_pred,
-                        y=y_pred,
-                        z=z_pred,
-                        plot_edges=False,
-                        colormap=colormap,
-                        simplices=simplices_pred,
-                        title="Isosurface")
-    plotly.offline.plot(fig, auto_open=False, filename="chair_pred.html")
+    HTML_rendering('GT'    , verts_gt    , simplices_gt    )
+    HTML_rendering('OURS'  , verts_ours  , simplices_ours  )
+    HTML_rendering('THEIRS', verts_theirs, simplices_theirs)
+    print('done.')
+
     
     TEST_DATASET.shutdown()
+
+
+    

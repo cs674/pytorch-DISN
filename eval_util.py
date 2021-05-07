@@ -1,23 +1,22 @@
-import numpy as np
-from scipy.optimize import linear_sum_assignment
-import mcubes
-import numpy as np
-import plotly.graph_objects as go
-from plotly.offline import iplot
-import pdb
-import trimesh
 import os
 import pymesh
-
+import trimesh
+import numpy as np
+import mcubes
+import plotly
+import plotly.graph_objects as go
+import plotly.figure_factory as ff
+from plotly.offline import iplot
+from scipy.optimize import linear_sum_assignment
 ################################################################################
 # Evaluation for Sampled Point Cloud
 ################################################################################
 # Chamfer Distance
 def CD(PC, PC_T):
-    print('PC')
-    print(PC.shape)
-    print('PC_T')
-    print(PC_T.shape)
+    # print('PC')
+    # print(PC.shape)
+    # print('PC_T')
+    # print(PC_T.shape)
     ret1 = 0
     ret2 = 0
     for p1 in PC:
@@ -111,7 +110,8 @@ def obj_data_to_mesh3d(odata):
 
 
 
-def get_normalize_mesh(model_file, norm_mesh_sub_dir):
+#def get_normalize_mesh(model_file, norm_mesh_sub_dir):
+def get_normalize_mesh(model_file, norm_file):
     total = 16384 
     print("trimesh_load:", model_file)
     mesh_list = trimesh.load_mesh(model_file, process=False)
@@ -135,9 +135,25 @@ def get_normalize_mesh(model_file, norm_mesh_sub_dir):
     centroid = np.mean(points_all, axis=0)
     points_all = points_all - centroid
     m = np.max(np.sqrt(np.sum(points_all ** 2, axis=1)))
-    obj_file = os.path.join(norm_mesh_sub_dir, "pc_norm.obj")
+#    obj_file = os.path.join(norm_mesh_sub_dir, "pc_norm.obj")
+    obj_file = norm_file
     ori_mesh = pymesh.load_mesh(model_file)
     print("centroid, m", centroid, m)
     pymesh.save_mesh_raw(obj_file, (ori_mesh.vertices - centroid) / float(m), ori_mesh.faces);
     print("export_mesh", obj_file)
     return obj_file, centroid, m
+
+
+
+def HTML_rendering(name, verts, simplices):
+    print('HTML Rendering: ' + name)
+    _x, _y, _z = zip(*verts)
+    colormap = ['rgb(255,105,180)', 'rgb(255,255,51)', 'rgb(0,191,255)']
+    fig = ff.create_trisurf(x = _x,
+                            y = _y,
+                            z = _z,
+                            simplices=simplices,
+                            plot_edges=False,
+                            colormap=colormap,
+                            title=name)
+    plotly.offline.plot(fig, auto_open=False, filename="html/chair_" + name + ".html")    
