@@ -147,7 +147,7 @@ with torch.no_grad():
     # obj_nm = 953a6c4d742f1e44d1dcc55e36186e4e, viewid=2
     batch_data = TEST_DATASET.get_batch(650)
     # Generate grid
-    N = 257
+    N = 65
     dist = 1
     max_dimensions = np.array([dist, dist, dist])
     min_dimensions = np.array([-dist, -dist, -dist])
@@ -167,7 +167,7 @@ with torch.no_grad():
     #img_file = "03001627_d72f27e4240bd7d0283b00891f680579_00.png"
     img_arr = cv2.imread(img_file, cv2.IMREAD_UNCHANGED).astype(np.uint8)[:, :, :3]
     batch_img = np.asarray([img_arr.astype(np.float32) / 255.])
-    batch_data = {}
+    #batch_data = {}
     batch_data['img'] = batch_img
     print(batch_data.keys())
 
@@ -175,6 +175,9 @@ with torch.no_grad():
     # 'img', 'trans_mat', 'cat_id', 'obj_nm', 'view_id'
     # print(batch_data['obj_nm'])
     # print(batch_data['view_id'])
+
+    print(batch_data['trans_mat'])
+
 
     
 
@@ -216,7 +219,8 @@ with torch.no_grad():
     
     # THEIRS
     print('Collect OURS surface samples...', end=' ')
-    obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
+#    obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
+    obj_file_theirs                   = './chair_theirs.obj'
     #obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'obj/')
     obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'obj/chair_theirs_norm.obj')
     with open(obj_file_theirs_norm, 'r', encoding='utf8') as f_theirs:
