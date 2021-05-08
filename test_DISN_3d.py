@@ -78,14 +78,14 @@ print(FLAGS)
 # Shuffle the dataset?
 shuffle = False
 # Change this to switch between train and test
-train = True
+train = False
 if train:
     split = 'train'
 else:
     split = 'test'
 
-#two_stream = False
-two_stream = False
+# two_stream = False
+two_stream = True
 
 TEST_LISTINFO = []
 cats_limit = {}
@@ -131,14 +131,14 @@ with torch.no_grad():
     print(len(TEST_DATASET)/FLAGS.batch_size)
 
     # Use fetch to get random, use get_batch for the same everytime
-    batch_data = TEST_DATASET.get_batch(650)
+    batch_data = TEST_DATASET.get_batch(50)
 
     # show image
     # plt.imshow(batch_data['img'][0])
     # plt.show()
 
     # Generate grid
-    N = 64
+    N = 128
     dist = 0.9
     max_dimensions = np.array([dist, dist, dist])
     min_dimensions = np.array([-dist, -dist, -dist])
@@ -171,11 +171,18 @@ with torch.no_grad():
     points = torch.from_numpy(points.astype('Float32')).permute(1,0)
     trans_mat = torch.from_numpy(batch_data['trans_mat'])[0]
 
-    if two_stream:
-        pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0), trans_mat.unsqueeze(0))
-    else:
-        pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
-    # pred_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
+    max_num_points = 300000
+    num_chunks = int(np.ceil(points.shape[0]/max_num_points))
+    points_chunks = torch.chunk(points, num_chunks, dim=0)
+
+    pred_sdf = []
+    for c in range(num_chunks):
+        if two_stream:
+            pred_sdf_chunk = net(image.unsqueeze(0), points_chunks[c].unsqueeze(0), trans_mat.unsqueeze(0))
+        else:
+            pred_sdf_chunk = net(image.unsqueeze(0), points_chunks[c].unsqueeze(0))
+        pred_sdf.append(pred_sdf_chunk)
+    pred_sdf = torch.cat(pred_sdf, dim=1)
 
     np_sdf = pred_sdf.numpy()
 
@@ -200,8 +207,8 @@ with torch.no_grad():
     plotly.offline.plot(fig)
 
     # show image
-    # plt.imshow(batch_data['img'][0])
-    # plt.show()
+    plt.imshow(batch_data['img'][0])
+    plt.show()
 
     
     np.save('sdf.npy', np_sdf)

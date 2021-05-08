@@ -108,6 +108,9 @@ if train:
 else:
     split = 'test'
 
+# two_stream = False
+two_stream = True
+
 
 TEST_LISTINFO = []
 cats_limit = {}
@@ -138,7 +141,10 @@ print(info)
 with torch.no_grad():
     net = sdfnet()
     # Here we would like to load a pre trained model
-    net.load_state_dict(torch.load('models/sdfmodel_one_stream_99.torch', map_location='cpu'))
+    if two_stream:
+        net.load_state_dict(torch.load('models/sdfmodel_two_stream_99.torch', map_location='cpu'))
+    else:
+        net.load_state_dict(torch.load('models/sdfmodel_one_stream_99.torch', map_location='cpu'))
     net.eval()
     TEST_DATASET = data_sdf_h5_queue.Pt_sdf_img(FLAGS, listinfo=TEST_LISTINFO, info=info, cats_limit=cats_limit, shuffle=shuffle)
     TEST_DATASET.start()
@@ -188,7 +194,25 @@ with torch.no_grad():
     print('Predict and generate .obj file...', end=' ')
     image = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2)[OBJ_NO]
     points = torch.from_numpy(points.astype('Float32')).permute(1,0)
-    ours_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
+    trans_mat = torch.from_numpy(batch_data['trans_mat'])[OBJ_NO]
+
+    # ours_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
+
+    max_num_points = 300000
+    num_chunks = int(np.ceil(points.shape[0]/max_num_points))
+    points_chunks = torch.chunk(points, num_chunks, dim=0)
+
+    pred_sdf = []
+    for c in range(num_chunks):
+        if two_stream:
+            pred_sdf_chunk = net(image.unsqueeze(0), points_chunks[c].unsqueeze(0), trans_mat.unsqueeze(0))
+        else:
+            pred_sdf_chunk = net(image.unsqueeze(0), points_chunks[c].unsqueeze(0))
+        pred_sdf.append(pred_sdf_chunk)
+    pred_sdf = torch.cat(pred_sdf, dim=1)
+
+    ours_sdf = pred_sdf
+
     np_sdf = ours_sdf.numpy()
     IF = ours_sdf.reshape(N,N,N)
     IF = IF.permute(1,0,2)
