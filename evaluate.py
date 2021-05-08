@@ -153,7 +153,7 @@ with torch.no_grad():
     # obj_nm = 953a6c4d742f1e44d1dcc55e36186e4e, viewid=2
     batch_data = TEST_DATASET.get_batch(650)
     # Generate grid
-    N = 65
+    N = 257
     dist = 1
     max_dimensions = np.array([dist, dist, dist])
     min_dimensions = np.array([-dist, -dist, -dist])
