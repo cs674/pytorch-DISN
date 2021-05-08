@@ -1,0 +1,83 @@
+Using cache found in /home/hhwang/.cache/torch/hub/pytorch_vision_v0.9.0
+/mnt/nfs/work1/696ds-s21/hhwang/pytorch-DISN/models
+Namespace(alpha=False, augcolorback=False, augcolorfore=False, backcolorwhite=False, batch_size=1, beta1=0.5, binary=False, cam_est=False, cat_limit=168000, category='all', decay_rate=0.9, decay_step=200000, gpu='1', img_feat_onestream=True, img_feat_twostream=False, img_h=137, img_w=137, learning_rate=0.0001, log_dir='checkpoint', mask_weight=4.0, max_epoch=200, momentum=0.9, multi_view=False, num_classes=1024, num_points=1, num_sample_points=2048, optimizer='adam', restore_model='', restore_modelcnn='', restore_modelpn='', rot=False, sdf_res=256, tanh=False, threedcnn=False, train_lst_dir='./data/filelists', valid_lst_dir='./data/filelists', volimp=False)
+{'rendered_dir': '/mnt/nfs/work1/696ds-s21/hhwang/ssd1/datasets/ShapeNet/ShapeNetRenderingh5_v1/', 'sdf_dir': '/mnt/nfs/work1/696ds-s21/hhwang/ssd1/datasets/ShapeNet/SDF_v1/'}
+epoch_amount  187008
+cats_limit  {'04530566': 9048, '04090263': 11400, '03211117': 5256, '03636649': 11136, '03691459': 7680, '02933112': 7560, '03001627': 31464, '02828884': 8712, '02958343': 15048, '02691156': 19080, '04256520': 15144, '04379243': 40296, '04401088': 5184}
+Load a sample image...
+dict_keys(['img'])
+Predict and generate .obj file... done.
+Collect GT surface samples... done.
+Collect OURS surface samples... trimesh_load: obj/chair_ours.obj
+start sample surface of  180260
+end sample surface
+centroid, m [131.75160059 131.73462413 128.19555598] 126.33756111944173
+export_mesh obj/chair_ours_norm.obj
+done.
+Collect OURS surface samples... trimesh_load: ../DISN_xar/demo/chair_theirs.obj
+start sample surface of  149544
+end sample surface
+centroid, m [127.37532209 127.88477268 136.17068674] 120.79754217811423
+export_mesh obj/chair_theirs_norm.obj
+done.
+Ground Truth
+[[ 0.15446508  0.197606   -0.50018102]
+ [-0.44497267  0.40385486  0.23679409]
+ [-0.34550277 -0.27104443 -0.31055451]
+ [-0.44042804  0.03711975 -0.30261108]
+ [-0.37892955  0.00732684  0.40301327]
+ [ 0.11378682 -0.142654    0.31630555]
+ [-0.22626727 -0.07445756 -0.40577197]
+ [-0.30194036 -0.12254087 -0.42533806]
+ [-0.4162233   0.11615509  0.02430684]
+ [-0.39029032  0.38360956  0.33151086]]
+Ours
+[[-0.10093277 -0.07519961  0.30714891]
+ [ 0.45014463 -0.23535854 -0.45272012]
+ [ 0.34232416 -0.06913719  0.50098728]
+ [-0.33133064  0.38995035  0.41004784]
+ [ 0.33440886  0.10499946  0.44982447]
+ [ 0.35023946 -0.18510167  0.03011332]
+ [ 0.1523569  -0.0928831   0.49706649]
+ [ 0.25525583  0.23768376  0.48920086]
+ [-0.45315014  0.35828914  0.31506421]
+ [-0.46510818  0.38995035  0.10926635]]
+Theirs
+[[-0.35738051 -0.11494251  0.4971206 ]
+ [ 0.23865811 -0.17156364 -0.09416849]
+ [-0.36972745  0.34036477 -0.41702274]
+ [-0.33748766  0.1830768   0.06311948]
+ [ 0.46217259 -0.42124013 -0.53953505]
+ [-0.31220099  0.11685029  0.22868576]
+ [-0.35829383  0.24930331 -0.02794198]
+ [-0.42889916 -0.07355094  0.37769542]
+ [ 0.40422439  0.01645479 -0.45841431]
+ [-0.001413   -0.17840778 -0.11900343]]
+--------------------------------------------------------------------------------
+FSCORE
+Threshold(%)	1.0	2.0	5.0	10.0	20.0	
+--------------------------------------------------------------------------------
+OURS        	0.035	0.203	0.807	0.992	1.000	
+THEIRS      	0.031	0.193	0.862	0.982	0.990	
+--------------------------------------------------------------------------------
+Our Distances:
+Chamfer Distance      : 13.546292
+Earth Mover's Distance: 218.646100
+--------------------------------------------------------------------------------
+Their Distances:
+Chamfer Distance      : 18.334145
+Earth Mover's Distance: 251.303371
+--------------------------------------------------------------------------------
+GT shape
+(331182, 3)
+(662384, 3)
+OURS shape
+(90118, 3)
+(180260, 3)
+THEIRS shape
+(74776, 3)
+(149544, 3)
+HTML Rendering: GT
+HTML Rendering: OURS
+HTML Rendering: THEIRS
+done.
