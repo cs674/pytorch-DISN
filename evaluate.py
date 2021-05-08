@@ -147,7 +147,7 @@ with torch.no_grad():
     # obj_nm = 953a6c4d742f1e44d1dcc55e36186e4e, viewid=2
     batch_data = TEST_DATASET.get_batch(650)
     # Generate grid
-    N = 65
+    N = 257
     dist = 1
     max_dimensions = np.array([dist, dist, dist])
     min_dimensions = np.array([-dist, -dist, -dist])
@@ -204,10 +204,12 @@ with torch.no_grad():
     # OURS
     print('Collect OURS surface samples...', end=' ')
     obj_file_ours                     = 'obj/chair_ours.obj'
-#    obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, 'obj/')
     obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, 'obj/chair_ours_norm.obj')
-    mesh_ours                         = trimesh.load_mesh(obj_file_ours_norm, process=False)
-    pc_ours_surf, _                   = trimesh.sample.sample_surface(mesh_ours, FLAGS.num_sample_points)
+    with open(obj_file_ours_norm, 'r', encoding='utf8') as f_ours:
+        obj_data_ours = f_ours.read()
+        pc_ours_surf,_                = obj_data_to_mesh3d(obj_data_ours)
+    #mesh_ours                         = trimesh.load_mesh(obj_file_ours_norm, process=False)
+    #pc_ours_surf, _                   = trimesh.sample.sample_surface(mesh_ours, FLAGS.num_sample_points)
     choice_ours                       = np.random.randint(pc_ours_surf.shape[0], size=FLAGS.num_sample_points)
     PC_OURS                           = pc_ours_surf[choice_ours, ...]
     print('done.')
@@ -217,8 +219,11 @@ with torch.no_grad():
     obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
     #obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'obj/')
     obj_file_theirs_norm, centroid, m = get_normalize_mesh(obj_file_theirs, 'obj/chair_theirs_norm.obj')
-    mesh_theirs                       = trimesh.load_mesh(obj_file_theirs_norm, process=False)
-    pc_theirs_surf, _                 = trimesh.sample.sample_surface(mesh_theirs, FLAGS.num_sample_points)
+    with open(obj_file_theirs_norm, 'r', encoding='utf8') as f_theirs:
+        obj_data_theirs = f_theirs.read()
+        pc_theirs_surf,_                = obj_data_to_mesh3d(obj_data_theirs)
+    #mesh_theirs                       = trimesh.load_mesh(obj_file_theirs_norm, process=False)
+    #pc_theirs_surf, _                 = trimesh.sample.sample_surface(mesh_theirs, FLAGS.num_sample_points)
     choice_theirs                     = np.random.randint(pc_theirs_surf.shape[0], size=FLAGS.num_sample_points)
     PC_THEIRS                         = pc_theirs_surf[choice_theirs, ...]
     PC_THEIRS[:, [0,2]]               = PC_THEIRS[:, [2,0]]
@@ -293,9 +298,6 @@ with torch.no_grad():
     HTML_rendering('OURS'  , verts_ours  , simplices_ours  )
     HTML_rendering('THEIRS', verts_theirs, simplices_theirs)
     print('done.')
-
-
-
 
     
     TEST_DATASET.shutdown()

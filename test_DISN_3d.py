@@ -39,7 +39,7 @@ parser.add_argument("--beta1", type=float, dest="beta1",
 parser.add_argument('--num_sample_points', type=int, default=256, help='Sample Point Number [default: 2048]')
 # parser.add_argument('--sdf_points_num', type=int, default=32, help='Sample Point Number [default: 2048]')
 parser.add_argument('--max_epoch', type=int, default=200, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 32]')
 parser.add_argument('--img_h', type=int, default=137, help='Image Height')
 parser.add_argument('--img_w', type=int, default=137, help='Image Width')
 parser.add_argument('--sdf_res', type=int, default=256, help='sdf grid')
@@ -84,6 +84,7 @@ if train:
 else:
     split = 'test'
 
+#two_stream = False
 two_stream = False
 
 TEST_LISTINFO = []
@@ -199,8 +200,8 @@ with torch.no_grad():
     plotly.offline.plot(fig)
 
     # show image
-    plt.imshow(batch_data['img'][0])
-    plt.show()
+    # plt.imshow(batch_data['img'][0])
+    # plt.show()
 
     
     np.save('sdf.npy', np_sdf)
