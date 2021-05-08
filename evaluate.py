@@ -108,8 +108,8 @@ if train:
 else:
     split = 'test'
 
-# two_stream = False
-two_stream = True
+two_stream = False
+#two_stream = True
 
 
 TEST_LISTINFO = []
