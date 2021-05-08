@@ -198,7 +198,8 @@ with torch.no_grad():
     
     # GT (Already Normalized)
     print('Collect GT surface samples...', end=' ')
-    obj_file_gt    = '../ssd1/datasets/ShapeNet/mesh/03001627/953a6c4d742f1e44d1dcc55e36186e4e/isosurf.obj'
+    #obj_file_gt    = '../ssd1/datasets/ShapeNet/mesh/03001627/953a6c4d742f1e44d1dcc55e36186e4e/isosurf.obj'
+    obj_file_gt    = 'isosurf.obj'
     mesh_gt        = trimesh.load_mesh(obj_file_gt, process=False)
     pc_gt_surf, _  = trimesh.sample.sample_surface(mesh_gt, FLAGS.num_sample_points)
     choice_gt      = np.random.randint(pc_gt_surf.shape[0], size=FLAGS.num_sample_points)
