@@ -178,8 +178,8 @@ def HTML_rendering(name, verts, simplices):
     _x, _y, _z = zip(*verts)
     colormap = ['rgb(255,105,180)', 'rgb(255,255,51)', 'rgb(0,191,255)']
     fig = ff.create_trisurf(x = _x,
-                            y = _y,
-                            z = _z,
+                            y = _z,
+                            z = _y,
                             simplices=simplices,
                             plot_edges=False,
                             colormap=colormap,
