@@ -1,40 +1,44 @@
 from tqdm import tqdm
 import os
 import trimesh
-from eval_util import obj_data_to_mesh3d
+from eval_util import obj_data_to_mesh3d, FSCORE, CD, EMD
+import numpy as np
+import sys
 
-batch_no_vec = [1,100,201,300,400,500,550,600,80,900,1150]
+num_sample_points = 2048
+batch_no_vec = [100,201,300,400,500,550, 1150]
 for i in tqdm(range(len(batch_no_vec))):
     print('Collect GT surface samples...', end=' ')
     obj_file_gt    = './obj/gt/chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.obj'
-    if not os.path.isfile(obj_file_gt):
-        print('NOT EXIST: ' + obj_file_gt)
-        continue
+    # if not os.path.isfile(obj_file_gt):
+    #     print('NOT EXIST: ' + obj_file_gt)
+    #     continue
     with open(obj_file_gt, 'r', encoding='utf8') as f_gt:
         obj_data_gt = f_gt.read()
         pc_gt_surf,_                = obj_data_to_mesh3d(obj_data_gt)
-    choice_gt      = np.random.randint(pc_gt_surf.shape[0], size=FLAGS.num_sample_points)
+    choice_gt      = np.random.randint(pc_gt_surf.shape[0], size=num_sample_points)
     PC_GT          = pc_gt_surf[choice_gt, ...]
     print('done.')
 
 
     print('Collect OURS surface samples...', end=' ')
-    obj_file_ours                     = "./obj_cleaned/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj"
+    obj_file_ours_norm                     = "./obj_cleaned/ours/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
     with open(obj_file_ours_norm, 'r', encoding='utf8') as f_ours:
         obj_data_ours = f_ours.read()
         pc_ours_surf,_                = obj_data_to_mesh3d(obj_data_ours)
-    choice_ours                       = np.random.randint(pc_ours_surf.shape[0], size=FLAGS.num_sample_points)
+    
+    choice_ours                       = np.random.randint(pc_ours_surf.shape[0], size=num_sample_points)
     PC_OURS                           = pc_ours_surf[choice_ours, ...]
     print('done.')
 
     print('Collect OURS surface samples...', end=' ')
     #    obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
-    obj_file_theirs                   = "./obj/theirs/chair_theirs_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
+    obj_file_theirs_norm                   = "./obj/theirs/chair_theirs_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
 
     with open(obj_file_theirs_norm, 'r', encoding='utf8') as f_theirs:
         obj_data_theirs = f_theirs.read()
         pc_theirs_surf,_                = obj_data_to_mesh3d(obj_data_theirs)
-    choice_theirs                     = np.random.randint(pc_theirs_surf.shape[0], size=FLAGS.num_sample_points)
+    choice_theirs                     = np.random.randint(pc_theirs_surf.shape[0], size=num_sample_points)
     PC_THEIRS                         = pc_theirs_surf[choice_theirs, ...]
     PC_THEIRS[:, [0,2]]               = PC_THEIRS[:, [2,0]]
 
