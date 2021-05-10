@@ -143,6 +143,7 @@ def get_normalize_mesh(model_file, norm_file):
     total = 16384 
     print("trimesh_load:", model_file)
     mesh_list = trimesh.load_mesh(model_file, process=False)
+    #mesh_list = trimesh.load_mesh(model_file, force='mesh')    
     if not isinstance(mesh_list, list):
         mesh_list = [mesh_list]
     area_sum = 0

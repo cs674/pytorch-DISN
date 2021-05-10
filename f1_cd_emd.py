@@ -1,7 +1,7 @@
 from tqdm import tqdm
 import os
 import trimesh
-from eval_util import obj_data_to_mesh3d, FSCORE, CD, EMD
+from eval_util import obj_data_to_mesh3d, FSCORE, CD, EMD, get_normalize_mesh
 import numpy as np
 import sys
 
@@ -22,16 +22,26 @@ for i in tqdm(range(len(batch_no_vec))):
 
 
     print('Collect OURS surface samples...', end=' ')
-    obj_file_ours_norm                     = "./obj_cleaned/ours/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
-    with open(obj_file_ours_norm, 'r', encoding='utf8') as f_ours:
-        obj_data_ours = f_ours.read()
-        pc_ours_surf,_                = obj_data_to_mesh3d(obj_data_ours)
-    
+    # NORMALIZED and CLEANED
+    #obj_file_ours_norm                     = "./obj_cleaned/ours/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
+    # with open(obj_file_ours_norm, 'r', encoding='utf8') as f_ours:
+    #     obj_data_ours = f_ours.read()
+    #     pc_ours_surf,_                = obj_data_to_mesh3d(obj_data_ours)    
+
+    # CLEANED AND NORMALIZED
+    obj_file_ours                     = "obj_cleaned/ours/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj"
+    obj_file_ours_cleaned_norm, centroid, m   = get_normalize_mesh(obj_file_ours, "obj/chair_ours_cleaned_normalized_" + str(batch_no_vec[i]).zfill(4) + ".obj")
+    with open(obj_file_ours_cleaned_norm, 'r', encoding='utf8') as f_ours:
+         obj_data_ours = f_ours.read()
+         pc_ours_surf,_                = obj_data_to_mesh3d(obj_data_ours)    
     choice_ours                       = np.random.randint(pc_ours_surf.shape[0], size=num_sample_points)
     PC_OURS                           = pc_ours_surf[choice_ours, ...]
     print('done.')
 
-    print('Collect OURS surface samples...', end=' ')
+
+
+    
+    print('Collect THEIRS surface samples...', end=' ')
     #    obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
     obj_file_theirs_norm                   = "./obj/theirs/chair_theirs_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
 
