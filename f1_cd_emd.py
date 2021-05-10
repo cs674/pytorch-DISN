@@ -28,8 +28,8 @@ for i in tqdm(range(len(batch_no_vec))):
     #     obj_data_ours = f_ours.read()
     #     pc_ours_surf,_                = obj_data_to_mesh3d(obj_data_ours)    
 
-    # CLEANED AND NORMALIZED
-    obj_file_ours                     = "obj_cleaned/ours/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj"
+    # One more normalization
+    obj_file_ours                     = "obj_cleaned/ours/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
     obj_file_ours_cleaned_norm, centroid, m   = get_normalize_mesh(obj_file_ours, "obj/chair_ours_cleaned_normalized_" + str(batch_no_vec[i]).zfill(4) + ".obj")
     with open(obj_file_ours_cleaned_norm, 'r', encoding='utf8') as f_ours:
          obj_data_ours = f_ours.read()
@@ -61,7 +61,18 @@ for i in tqdm(range(len(batch_no_vec))):
     print(PC_THEIRS[:10])
     print('--------------------------------------------------------------------------------')
     print('FSCORE')
-    SIDE_LEN = 1.4
+    #SIDE_LEN = 1.4
+
+
+    x_side = np.max(PC_GT[:,0]) - np.min(PC_GT[:,0])
+    y_side = np.max(PC_GT[:,1]) - np.min(PC_GT[:,1])
+    z_side = np.max(PC_GT[:,2]) - np.min(PC_GT[:,2])
+    SIDE_LEN = max(x_side, y_side, z_side)
+    #print(x_side, y_side, z_side, SIDE_LEN)
+    #sys.exit()
+
+
+    
     ratios = [0.01, 0.02, 0.05, 0.10, 0.20]
     print('Threshold(%)', end='\t')
     for r in ratios:
