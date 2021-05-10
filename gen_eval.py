@@ -128,27 +128,31 @@ with torch.no_grad():
 
     TEST_DATASET = data_sdf_h5_queue.Pt_sdf_img(FLAGS, listinfo=TEST_LISTINFO, info=info, cats_limit=cats_limit, shuffle=shuffle)
     TEST_DATASET.start()
-    batch_no_vec = [1,100,201,300,400,500,550,600,80,900,1150]
+    batch_no_vec = [100,201,300,400,500,550,1150]
     for i in tqdm(range(len(batch_no_vec))):
         batch_data = TEST_DATASET.get_batch(batch_no_vec[i])
 
-        # GT (Already Normalized)
-        print('Collect GT surface samples...', end=' ')
-        obj_file_gt    = '../ssd1/datasets/ShapeNet/mesh/03001627/' + str(batch_data['obj_nm'][OBJ_NO])  + '/isosurf.obj'
 
-        print(obj_file_gt)
+        # GT (Already Normalized)
+        # print('Collect GT surface samples...', end=' ')
+        # obj_file_gt    = '../ssd1/datasets/ShapeNet/mesh/03001627/' + str(batch_data['obj_nm'][OBJ_NO])  + '/isosurf.obj'
+
+        # print(obj_file_gt)
 
         if not os.path.isfile(obj_file_gt):
             print('NOT EXIST: ' + obj_file_gt)
             continue
 
-        copyfile(obj_file_gt, './obj/gt/' + 'chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.obj')        
+        print(batch_data['img'])
+        sys.exit(0)
+        copyfile(batch_data['img'], './img/gt/' + 'chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.img')        
+        # copyfile(obj_file_gt, './obj/gt/' + 'chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.obj')        
         
         # mesh_gt        = trimesh.load_mesh(obj_file_gt, process=False)
         # pc_gt_surf, _  = trimesh.sample.sample_surface(mesh_gt, FLAGS.num_sample_points)
         # choice_gt      = np.random.randint(pc_gt_surf.shape[0], size=FLAGS.num_sample_points)
         # PC_GT          = pc_gt_surf[choice_gt, ...]
-        print('done.')
+        # print('done.')
 
 
 
