@@ -10,17 +10,12 @@ batch_no_vec = [100,201,300,400,500,550, 1150]
 for i in tqdm(range(len(batch_no_vec))):
     print('Collect GT surface samples...', end=' ')
     obj_file_gt    = './obj/gt/chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.obj'
-    # if not os.path.isfile(obj_file_gt):
-    #     print('NOT EXIST: ' + obj_file_gt)
-    #     continue
     with open(obj_file_gt, 'r', encoding='utf8') as f_gt:
         obj_data_gt = f_gt.read()
         pc_gt_surf,_                = obj_data_to_mesh3d(obj_data_gt)
     choice_gt      = np.random.randint(pc_gt_surf.shape[0], size=num_sample_points)
     PC_GT          = pc_gt_surf[choice_gt, ...]
     print('done.')
-
-
     print('Collect OURS surface samples...', end=' ')
     # NORMALIZED and CLEANED
     #obj_file_ours_norm                     = "./obj_cleaned/ours/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
@@ -61,17 +56,11 @@ for i in tqdm(range(len(batch_no_vec))):
     print(PC_THEIRS[:10])
     print('--------------------------------------------------------------------------------')
     print('FSCORE')
-    #SIDE_LEN = 1.4
-
 
     x_side = np.max(PC_GT[:,0]) - np.min(PC_GT[:,0])
     y_side = np.max(PC_GT[:,1]) - np.min(PC_GT[:,1])
     z_side = np.max(PC_GT[:,2]) - np.min(PC_GT[:,2])
     SIDE_LEN = max(x_side, y_side, z_side)
-    #print(x_side, y_side, z_side, SIDE_LEN)
-    #sys.exit()
-
-
     
     ratios = [0.01, 0.02, 0.05, 0.10, 0.20]
     print('Threshold(%)', end='\t')

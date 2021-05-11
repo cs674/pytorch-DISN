@@ -53,7 +53,6 @@ parser.add_argument('--optimizer', default='adam', help='adam or momentum [defau
 parser.add_argument('--restore_model', default='', help='restore_model') #checkpoint/sdf_2d3d_sdfbasic2_nowd
 parser.add_argument('--restore_modelpn', default='', help='restore_model')#checkpoint/sdf_3dencoder_sdfbasic2/latest.ckpt
 parser.add_argument('--restore_modelcnn', default='', help='restore_model')#../../models/CNN/pretrained_model/vgg_16.ckpt
-
 parser.add_argument('--train_lst_dir', default=lst_dir, help='train mesh data list')
 parser.add_argument('--valid_lst_dir', default=lst_dir, help='test mesh data list')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -73,8 +72,6 @@ parser.add_argument('--tanh', action='store_true')
 parser.add_argument('--cam_est', action='store_true')
 parser.add_argument('--cat_limit', type=int, default=168000, help="balance each category, 1500 * 24 = 36000")
 parser.add_argument('--multi_view', action='store_true')
-
-
 FLAGS = parser.parse_args()
 print(FLAGS)
 
@@ -87,8 +84,8 @@ if train:
 else:
     split = 'test'
 
-#two_stream = False
-two_stream = True
+two_stream = False
+#two_stream = True
 
 
 TEST_LISTINFO = []
@@ -131,21 +128,13 @@ with torch.no_grad():
     batch_no_vec = [100,201,300,400,500,550,1150]
     for i in tqdm(range(len(batch_no_vec))):
         batch_data = TEST_DATASET.get_batch(batch_no_vec[i])
-
-
         # GT (Already Normalized)
         # print('Collect GT surface samples...', end=' ')
         # obj_file_gt    = '../ssd1/datasets/ShapeNet/mesh/03001627/' + str(batch_data['obj_nm'][OBJ_NO])  + '/isosurf.obj'
 
-        # print(obj_file_gt)
 
-        if not os.path.isfile(obj_file_gt):
-            print('NOT EXIST: ' + obj_file_gt)
-            continue
-
-        print(batch_data['img'])
-        sys.exit(0)
-        copyfile(batch_data['img'], './img/gt/' + 'chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.img')        
+        # print(batch_data['img'])
+        # copyfile(batch_data['img'], './img/gt/' + 'chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.img')        
         # copyfile(obj_file_gt, './obj/gt/' + 'chair_gt_' + str(batch_no_vec[i]).zfill(4) + '.obj')        
         
         # mesh_gt        = trimesh.load_mesh(obj_file_gt, process=False)
@@ -154,31 +143,25 @@ with torch.no_grad():
         # PC_GT          = pc_gt_surf[choice_gt, ...]
         # print('done.')
 
-
-
-
-        
-
-        # N = FLAGS.sdf_res + 1
-        # dist = 1
-        # max_dimensions = np.array([dist, dist, dist])
-        # min_dimensions = np.array([-dist, -dist, -dist])
-        # bounding_box_dimensions = max_dimensions - min_dimensions
-        # grid_spacing = max(bounding_box_dimensions)/N
-        # X, Y, Z = np.meshgrid(list(np.arange(min_dimensions[0], max_dimensions[0], grid_spacing)),
-        #                       list(np.arange(min_dimensions[1], max_dimensions[1], grid_spacing)),
-        #                       list(np.arange(min_dimensions[2], max_dimensions[2], grid_spacing)))
-        # X = X.reshape(-1)
-        # Y = Y.reshape(-1)
-        # Z = Z.reshape(-1)
-        # points = np.array([X, Y, Z])
-        # print('Load a sample image...')
-
-        # print('Predict and generate .obj file...', end=' ')
-        # image = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2)[OBJ_NO]
-        # points = torch.from_numpy(points.astype('Float32')).permute(1,0)
-        # trans_mat = torch.from_numpy(batch_data['trans_mat'])[OBJ_NO]
-        # # ours_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
+        N = FLAGS.sdf_res + 1
+        dist = 1
+        max_dimensions = np.array([dist, dist, dist])
+        min_dimensions = np.array([-dist, -dist, -dist])
+        bounding_box_dimensions = max_dimensions - min_dimensions
+        grid_spacing = max(bounding_box_dimensions)/N
+        X, Y, Z = np.meshgrid(list(np.arange(min_dimensions[0], max_dimensions[0], grid_spacing)),
+                              list(np.arange(min_dimensions[1], max_dimensions[1], grid_spacing)),
+                              list(np.arange(min_dimensions[2], max_dimensions[2], grid_spacing)))
+        X = X.reshape(-1)
+        Y = Y.reshape(-1)
+        Z = Z.reshape(-1)
+        points = np.array([X, Y, Z])
+        print('Load a sample image...')
+        print('Predict and generate .obj file...', end=' ')
+        image = torch.from_numpy(batch_data['img']).permute(0, 3, 1, 2)[OBJ_NO]
+        points = torch.from_numpy(points.astype('Float32')).permute(1,0)
+        trans_mat = torch.from_numpy(batch_data['trans_mat'])[OBJ_NO]
+        ours_sdf = net(image.unsqueeze(0), points.unsqueeze(0))
         # max_num_points = 300000
         # num_chunks = int(np.ceil(points.shape[0]/max_num_points))
         # points_chunks = torch.chunk(points, num_chunks, dim=0)
@@ -193,34 +176,22 @@ with torch.no_grad():
         #     pred_sdf.append(pred_sdf_chunk)
         # pred_sdf = torch.cat(pred_sdf, dim=1)
         # ours_sdf = pred_sdf
-        # np_sdf = ours_sdf.numpy()
-        # IF = ours_sdf.reshape(N,N,N)
-        # IF = IF.permute(1,0,2)
-        # verts_ours, simplices_ours = mcubes.marching_cubes(np.asarray(IF), 0)
-        # mcubes.export_obj(verts_ours, simplices_ours, "obj/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj")
-        # print('done.')
-        # # OURS
-        # print('Collect OURS surface samples...', end=' ')
-        # obj_file_ours                     = "obj/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj"
-        # obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, "obj/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj")
+        np_sdf = ours_sdf.numpy()
+        IF = ours_sdf.reshape(N,N,N)
+        IF = IF.permute(1,0,2)
+        verts_ours, simplices_ours = mcubes.marching_cubes(np.asarray(IF), 0)
+        mcubes.export_obj(verts_ours, simplices_ours, "obj/onestream/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj")
+        print('done.')
+        # OURS
+        #print('Collect OURS surface samples...', end=' ')
+        # obj_file_ours                     = "obj/onestream/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj"
+        # obj_file_ours_norm, centroid, m   = get_normalize_mesh(obj_file_ours, "obj/onestream/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj")
         # with open(obj_file_ours_norm, 'r', encoding='utf8') as f_ours:
         #     obj_data_ours = f_ours.read()
         #     pc_ours_surf,_                = obj_data_to_mesh3d(obj_data_ours)
         # choice_ours                       = np.random.randint(pc_ours_surf.shape[0], size=FLAGS.num_sample_points)
         # PC_OURS                           = pc_ours_surf[choice_ours, ...]
-        # print('done.')
-
-
-
-
-
-
-
-
-
-
-
-
+        print('done.')
         
         # THEIRS
         # print('Collect OURS surface samples...', end=' ')
