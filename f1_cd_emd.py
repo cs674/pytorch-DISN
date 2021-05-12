@@ -26,8 +26,9 @@ for i in tqdm(range(len(batch_no_vec))):
     # One more normalization
     # obj_file_ours                     = "obj_cleaned/ours/chair_ours_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
     # obj_file_ours_cleaned_norm, centroid, m   = get_normalize_mesh(obj_file_ours, "obj/chair_ours_cleaned_normalized_" + str(batch_no_vec[i]).zfill(4) + ".obj")
-    obj_file_ours                     = "obj/onestream/chair_ours_" + str(batch_no_vec[i]).zfill(4) + ".obj"
-    obj_file_ours_cleaned_norm, centroid, m   = get_normalize_mesh(obj_file_ours, "obj/onestream/chair_ours_normalized_" + str(batch_no_vec[i]).zfill(4) + ".obj")
+    obj_file_ours                     = "./obj_cleaned/localonly/chair_ours_normalized_" + str(batch_no_vec[i]).zfill(4) + ".obj"
+    obj_file_ours_cleaned_norm, centroid, m   = get_normalize_mesh(obj_file_ours, "obj_cleaned/localonly/chair_final_" + str(batch_no_vec[i]).zfill(4) + ".obj")
+
     
     with open(obj_file_ours_cleaned_norm, 'r', encoding='utf8') as f_ours:
          obj_data_ours = f_ours.read()
@@ -36,9 +37,6 @@ for i in tqdm(range(len(batch_no_vec))):
     PC_OURS                           = pc_ours_surf[choice_ours, ...]
     print('done.')
 
-
-
-    
     print('Collect THEIRS surface samples...', end=' ')
     #    obj_file_theirs                   = '../DISN_xar/demo/chair_theirs.obj'
     obj_file_theirs_norm                   = "./obj/theirs/chair_theirs_norm_" + str(batch_no_vec[i]).zfill(4) + ".obj"
@@ -49,7 +47,6 @@ for i in tqdm(range(len(batch_no_vec))):
     choice_theirs                     = np.random.randint(pc_theirs_surf.shape[0], size=num_sample_points)
     PC_THEIRS                         = pc_theirs_surf[choice_theirs, ...]
     PC_THEIRS[:, [0,2]]               = PC_THEIRS[:, [2,0]]
-
 
     print('Ground Truth')
     print(PC_GT[:10])
@@ -94,6 +91,10 @@ for i in tqdm(range(len(batch_no_vec))):
     emd  = EMD(PC_THEIRS, PC_GT)
     print('Earth Mover\'s Distance: %f' % emd)
     print('--------------------------------------------------------------------------------')
+
+
+
+    
     # Renderings
     # with open(obj_file_gt, 'r', encoding='utf8') as f_gt:
     #     obj_data_gt = f_gt.read()
@@ -102,12 +103,13 @@ for i in tqdm(range(len(batch_no_vec))):
     # print(verts_gt.shape)
     # print(simplices_gt.shape)
     
-    # with open(obj_file_ours_cleaned_norm, 'r', encoding='utf8') as f_ours:
-    #     obj_data_ours = f_ours.read()
-    #     verts_ours  , simplices_ours   = obj_data_to_mesh3d(obj_data_ours)
-    # print('OURS shape')
-    # print(verts_ours.shape)
-    # print(simplices_ours.shape)
+    with open(obj_file_ours_cleaned_norm, 'r', encoding='utf8') as f_ours:
+        obj_data_ours = f_ours.read()
+        verts_ours  , simplices_ours   = obj_data_to_mesh3d(obj_data_ours)
+    print('OURS shape')
+    print(verts_ours.shape)
+    print(simplices_ours.shape)
+    
     # with open(obj_file_theirs_norm, 'r', encoding='utf8') as f_theirs:
     #     obj_data_theirs = f_theirs.read()
     #     verts_theirs, simplices_theirs = obj_data_to_mesh3d(obj_data_theirs)
@@ -117,7 +119,7 @@ for i in tqdm(range(len(batch_no_vec))):
     # print(simplices_theirs.shape)
     # verts_theirs[:, [0,2]] = verts_theirs[:, [2,0]]
     #HTML_rendering('GT_'     + str(batch_no_vec[i]).zfill(4), verts_gt    , simplices_gt    )
-    #HTML_rendering('OURS_OS_'   + str(batch_no_vec[i]).zfill(4), verts_ours  , simplices_ours  )
+    HTML_rendering('OURS_LOCALONLY_'   + str(batch_no_vec[i]).zfill(4), verts_ours  , simplices_ours  )
     #HTML_rendering('THEIRS_' + str(batch_no_vec[i]).zfill(4), verts_theirs, simplices_theirs)
     print('done.')
 

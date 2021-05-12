@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
 
     cats = {
-        "chair": "ours",
+        "chair": "localonly",
         # "bench": "02828884",
         # "car": "02958343",
         # "airplane": "02691156",
