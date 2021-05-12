@@ -65,7 +65,7 @@ nohup python -u preprocessing/create_img_h5.py &> log/create_imgh5.log &
 
 Work distribution:
 
-Hee Hwang: evaluate.py, evaluate_V2.py, f1_cd_emd.py
+Hee Hwang: evaluate.py, evaluate_V2.py, eval_util.py, f1_cd_emd.py
 
 Edward Schneeweiss: test_dataloader.py, train_DISN.py, train_DISN_V2.py, test_DISN_3d.py, test_DISN_3d_V2.py
 
