@@ -11,11 +11,12 @@ run: python3 test_dataloader.py --img_feat_onestream --category="chair"
 this will run my tester which gives a nice demo
 
 # System Requirements
-GPU: 2080Ti (Other models can consider decrease the batch size if overflow)
-Pytorch 1.8.1
-h5py 3.2.1
-pymcubes 0.1.2
-pymesh 1.0.2
+* GPU: 2080Ti (Other models can consider decrease the batch size if overflow)
+* Python 3.6 - 3.8
+* Pytorch 1.8.1
+* h5py 3.2.1
+* pymcubes 0.1.2
+* pymesh 1.0.2
 
 # Data preperation
 Please setup the following file structure to put the datasets in.  
