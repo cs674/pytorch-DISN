@@ -4,11 +4,17 @@ pytorch implementation of DISN
 make sure to create info.json, start by making a copy of info_example.json then modify the paths.
 
 
-To get started with the dataloader
-
+To test the dataloader
 run: python3 test_dataloader.py --img_feat_onestream --category="chair"
 
-this will run my tester which gives a nice demo
+To test the model
+run: python3 test_DISN_3d_V2.py
+
+To train the model
+run: python3 train_DISN_V2.py
+
+To evaluate the model
+run: python3 evaluate_V2.py
 
 # System Requirements
 * GPU: 2080Ti (Other models can consider decrease the batch size if overflow)
